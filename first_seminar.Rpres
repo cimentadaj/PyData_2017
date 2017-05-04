@@ -1,11 +1,38 @@
-The tidyverse
+<style>
+
+bold {font-weight: bold; }
+
+.section .reveal .state-background {
+    background: white;
+}
+
+.section .reveal p {
+   color: black;
+   text-align:center;
+   font-size: 1.8em;
+}
+
+.section .reveal h1,
+.section .reveal h2 {
+    color: black;
+    text-align:center;
+    width:100%;
+}
+
+</style>
+
+An introduction to the tidyverse
 ========================================================
 author: Jorge Cimentada  
-date: 16th of February of 2017  
+date: 19th of May of 2017  
 class: illustration
 font-family: 'Helvetica'
 width: 1800
 height: 900
+
+<div align="center">
+<img src="./figures/logo_tidyverse.png" width=300 height=350>
+</div>
 
 The philosophy of the tidyverse 
 ========================================================
@@ -17,13 +44,13 @@ knitr::opts_chunk$set(fig.width = 15)
 
 - What is the tidyverse?
 
-- "The tidyverse is a set of packages that work in harmony because they share common data representations." Hadley Wickham
+- "The packages in the tidyverse share a common philosophy of data and R programming, and are designed to work together naturally." R4DS
 
 - They've been created with the same data process in mind.
 
 Remember R packages have been created by thousands of users without a clear structure!
 
-The tidyverse is one attempt at unifying the philosophy of data analysis.
+The tidyverse is one attempt at unifying a philosophy of data analysis.
 
 The philosophy of the tidyverse
 =======================================================
@@ -41,8 +68,7 @@ The philosophy of the tidyverse
 
 What is the tidyverse for?
 
-"My goal is to make the  data analysis process a pit of success" Hadley Wickham
-
+"My goal is to make the data analysis process a pit of success" Hadley Wickham
 
 <div align="left">
 <img src="./figures/data-science.png" width=1000 height=300>
@@ -60,15 +86,24 @@ The philosophy of the tidyverse
 The philosophy of the tidyverse
 ======================================================
 
-- Why TIDYverse?
+- Why <bold>TIDY</bold>verse?
 
-- Why tidyVERSE?
+- Why tidy<bold>VERSE</bold>?
 
 First..
 =======================================================
 ```{r, eval = F}
 library(tidyverse)
+
+# Loading tidyverse: ggplot2
+# Loading tidyverse: tibble
+# Loading tidyverse: tidyr
+# Loading tidyverse: readr
+# Loading tidyverse: purrr
+# Loading tidyverse: dplyr
 ```
+
+- These are the main packages and the ones that are loaded automatically by the tidyverse
 
 Data visualization
 ========================================================
