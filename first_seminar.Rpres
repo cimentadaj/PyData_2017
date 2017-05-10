@@ -52,7 +52,7 @@ Remember R packages have been created by thousands of users without a clear stru
 
 The tidyverse is one attempt at unifying a philosophy of data analysis.
 
-The philosophy of the tidyverse
+What is the tidyverse?
 =======================================================
 
 Yeah, the tidyverse is really just a package that installs other packages:
@@ -63,10 +63,11 @@ Yeah, the tidyverse is really just a package that installs other packages:
 install.packages("tidyverse")
 ```
 
-The philosophy of the tidyverse
+What is the tidyverse?
 =======================================================
 
 What is the tidyverse for?
+- It is primarily for doing data analysis and data science.
 
 "My goal is to make the data analysis process a pit of success" Hadley Wickham
 
@@ -76,43 +77,343 @@ What is the tidyverse for?
 
 <small>http://r4ds.had.co.nz/introduction.html</small>
 
-The philosophy of the tidyverse
+It covers all the important steps in the data analysis workflow. You start by importing the data, this can be a well structured csv or json file or something very messy you scraped from a website. Next, you have to tidy the data, or make it suitable for analysis and then you enter the 'interactive' section of data analysis. Here there's an interplay of creating/transforming variables, visualizing interesting patterns and try to model and explain these patterns. This process gets repeated iteratively until you reach a conclusion. That is the moment we communicate our results.
+
+What is the tidyverse?
 ======================================================
 
 <div align="center">
-<img src="./figures/tidyverse_pkgs.png" width=800 height=650>
+<img src="./figures/tidyverse_pkgs.png" width=2000 height=650>
 </div>
 
-The philosophy of the tidyverse
-======================================================
+For all packages, see [here](https://github.com/tidyverse/tidyverse)
 
-- Why <bold>TIDY</bold>verse?
-
-- Why tidy<bold>VERSE</bold>?
-
-First..
+Let's get our hands dirty!
 =======================================================
+
 ```{r, eval = F}
 library(tidyverse)
 
-# Loading tidyverse: ggplot2
+# Loading tidyverse: readr
 # Loading tidyverse: tibble
 # Loading tidyverse: tidyr
-# Loading tidyverse: readr
-# Loading tidyverse: purrr
 # Loading tidyverse: dplyr
+# Loading tidyverse: purrr
+# Loading tidyverse: ggplot2
 ```
 
 - These are the main packages and the ones that are loaded automatically by the tidyverse
+- Today we will talk about the core tidyverse packages, ocassionaly mentioning which other packages are useful in certain situations.
 
-Data visualization
+Import
 ========================================================
 
-```{r, echo = T}
+```{r, echo = F}
 library(tidyverse)
-library(fivethirtyeight)
-police_killings
 ```
+
+Formats:
+
+* csv
+* semi-colon delim
+* text
+* fixed-width-file
+* json
+* xml and xlsx
+* databases
+* etc.. see [here](https://github.com/tidyverse/tidyverse)
+
+The usual plain-text files can be read/written with:
+
+read_*()
+write_*()
+
+But other formats have slightly different syntax (For example, databases or jsons).
+
+Once you're familiar with one or two read_*() functions, you're pretty much familiar with
+all other read_*() functions.
+
+Import
+========================================================
+
+```{r, echo = F}
+options(tibble.print_min = 5,
+        tibble.max_extra_cols = 3)
+```
+
+Let's read our toy dataset.
+```{r}
+url <- "https://raw.githubusercontent.com/cimentadaj/PyData_2017/master/data/police_killings.csv"
+police_killings <- read_csv(url)
+
+# More generally:
+police_killings <- read_delim(url, delim = ",")
+```
+
+read_*() functions try to guess the class of each column using a set of standard parsing functions.
+
+Several arguments are set to usual defaults:
+* Column types are guessed using the first 1000 rows (problem?)
+* First row is assumed to be the header
+* The delimiter is set to be equal to the \* of read_*() (comma, semi-colon, etc..)
+* country-specific options are set to be US-centric, as R (dates, decimal points, timezonez)
+
+`?locale`
+
+Tidying your data
+========================================================
+
+# Who uses data frames in R?
+
+Data frames are, in most of the cases, the primary unit of analysis in R. It allows you to have your data in a rectangular format, with related objects occupying a row-column cell. Data frames have been around for the past 10-20 years, since S, the predecessor of R.
+
+Tidying your data
+========================================================
+
+```{r, echo = F}
+options(tibble.width = 55)
+select(police_killings, name:month)
+options(tibble.width = 70)
+```
+
+***
+
+```{r, echo = F}
+select(police_killings, name:month) %>%
+  as.data.frame() %>%
+  head(10)
+```
+
+Tidying your data
+========================================================
+
+```{r, echo = F}
+options(tibble.width = 55)
+select(police_killings, name:month) %>%
+  print(n = 5)
+options(tibble.width = 110)
+```
+
+
+The most obvious differences:
+* Tibbles print only a reasonable number of rows (have you resarted R because of printing a massive df?)
+* Each column has class printed out
+* Dimensions on top of each row
+
+Othe important differences:
+* Subseting mtcars[, "mpg"] returns a tibble (no more drop = F).
+* Not all functions work with tibbles, so remember to as.data.frame() your tibble
+
+Tidying and transforming your data
+========================================================
+* How many Blacks were killed per state?
+```{r}
+# Can you understand this?
+filtered_df <- filter(
+    select(police_killings, state, raceethnicity),
+    raceethnicity == "Black")
+
+summarize(
+  group_by(filtered_df, state),
+  blacks_deaths = n())
+```
+
+Tidying and transforming your data
+========================================================
+* Do states with higher variance in household income (inequality) have more black deaths?
+```{r}
+# Can you understand this?
+summarized_df <-
+  arrange(
+  summarize(
+    group_by(police_killings, state),
+    black_deaths = mean(raceethnicity == "Black", na.rm = T),
+    sd_hhincome = sd(h_income, na.rm = T)),
+  sd_hhincome)
+
+top_n(summarized_df, 5, sd_hhincome)
+```
+
+The pipe
+========================================================
+
+Brief detour:
+
+<div align="center">
+<img src="./figures/pipe.png" width=800 height=530>
+</div>
+
+This is the pipe.
+
+The pipe
+============================================================
+
+* Instead of mean(x), x %>% mean() is equivalent to mean(x)
+
+* Just as the `|` pipe in Unix
+
+* The pipe carries the previous result into the next function
+
+* Best thing: you didn't have to create an object
+
+* This mantains a logical and clean workflow
+
+The pipe
+========================================================
+We could rewrite the previous as:
+
+* How many Blacks were killed per state?
+```{r, eval = F}
+police_killings %>%
+  select(state, raceethnicity) %>%
+  filter(raceethnicity == "Black") %>%
+  group_by(state) %>%
+  summarize(
+    black_deaths = n()
+  )
+```
+* Do states with higher variance in household income (inequality) have more black deaths?
+```{r, eval = F}
+police_killings %>%
+  group_by(state) %>%
+  summarize(black_deaths = mean(raceethnicity == "Black", na.rm = T),
+            sd_hhincome = sd(h_income, na.rm = T)) %>%
+  arrange(sd_hhincome) %>%
+  top_n(10, sd_hhincome)
+```
+
+Tidying and transforming your data
+============================================================
+
+`dplyr` is a package to do data manipulation.
+
+`dplyr` contains 'verbs' which makes data manipulation very intuitive.
+
+These are:
+
+* Create new columns with `mutate()`
+* Select variables with `select()`
+* Select rows with `filter()`
+* Change column names with `rename()`
+* Sort by variables with `arrange()`
+* Apply operations by group with `group_by()`
+* Compute summary variables with `summarise()`
+
+Delete: These functions provide the verbs for a language of data manipulation
+
+Tidying and transforming your data
+============================================================
+
+They are so intuitive that even reading them can tell you what they do:
+
+```{r}
+police_killings %>%
+  rename(ethnicity = raceethnicity) %>%
+  select(gender, age, year, ethnicity, city) %>%
+  mutate(year_born = age - year) %>%
+  group_by(gender, ethnicity) %>%
+  filter(gender == "Male") %>%
+  summarise(average_age = mean(age, na.rm = T)) %>%
+  arrange(average_age)
+```
+
+Can you tell what I'm doing?
+
+Tidying and transforming your data
+============================================================
+
+Verb structure:
+
+```{r, eval = F}
+
+select(.data, variable_name, variable_name)
+
+mutate(.data, new_name = contents, other_new_var = contents)
+
+group_by(.data, variable_name, variable_name)
+
+filter(.data, logical_statement, other_logical_statemente)
+
+summarise(.data, new_var = contents, new_var = contets)
+
+arrange(.data, var_to_sort_by, var_to_sort_by)
+```
+
+============================================================
+
+# All of these functions accept and return a data frame!
+
+Tidying and transforming your data
+============================================================
+
+Let's construct an expression ourselves.
+
+* First, let's pipe the data frame `police_killings` and change the name of `raceethnicity` to `ethnicity` using the `rename()` verb
+* Extend the pipeline to `filter()` only `Male` from `gender`
+* Pipe the expression to `group_by()` the state
+
+Tidying and transforming your data
+============================================================
+
+```{r, eval = F}
+police_killings %>%
+  rename(ethnicity = raceethnicity) %>%
+  filter(gender == "Male") %>%
+  group_by(state)
+```
+
+
+## What do we get back?
+
+* Extend the pipeline by using the `summarise()` function and create the new variable `avg_black` and `avg_white` which calculates the proportion of black and white deaths for each state.
+* Extend the pipeline to `arrange()` avg_black.
+* Save the expression with the name `black_white_deaths`
+
+Data transformation with dplyr
+============================================================
+
+```{r, eval = F}
+black_white_deaths <-
+  police_killings %>%
+  rename(ethnicity = raceethnicity) %>%
+  filter(gender == "Male") %>%
+  group_by(state) %>%
+  summarise(avg_white = mean(ethnicity == "White", na.rm = T),
+            avg_black = mean(ethnicity == "Black", na.rm = T)) %>%
+  arrange(avg_black)
+```
+
+```{r}
+exp_data <-
+  police_killings %>%
+  mutate(date = zoo::as.yearmon(paste(month, year, sep = "-"), format = "%b-%Y")) %>%
+  select(state, date) %>%
+  complete(date, state)
+
+exp_data %>%
+  count(state, date) %>%
+  mutate(n_lagged = lag(n),
+         increase = n - n_lagged,
+         increase = ifelse(is.na(increase), n, increase)) %>%
+  ggplot(aes(date, increase, colour = state, group = state)) +
+  geom_point(alpha = 0.7) +
+  geom_line(alpha = 0.7) +
+  scale_colour_discrete(guide = F) +
+  facet_wrap(~ state) +
+  xlab("Date") +
+  ylab("Monthly increase in deaths relative to previous month")
+```
+
+Data transformation with dplyr
+============================================================
+`dplyr` also has a bunch of 'helper' functions.
+
+For example:
+* `n()`
+* `lead()`
+* `lag()`
+
+## What do we get back?
 
 Data visualization
 ========================================================
@@ -225,7 +526,7 @@ Aesthetics vary by `geom_*()` functions so you should have a look at the documen
 - `size`
 - `stroke`
 
-Are common ones..
+are common ones..
 
 Data visualization
 ========================================================
@@ -383,222 +684,6 @@ To learn ggplot2:
 [R for Data Science](http://r4ds.had.co.nz/)  
 
 * But also wait for the third seminar given by Robert ;)
-
-The pipe
-========================================================
-
-This is the pipe: 
-
-<div align="center">
-<img src="./figures/pipe.png" width=800 height=530>
-</div>
-
-The pipe
-========================================================
-This is a typical data manipulation workflow in R: 
-
-```{r}
-police_killings$year_born <- police_killings$year - police_killings$age
-
-police_killings <- police_killings[police_killings$raceethnicity == "White", ]
-
-with(police_killings, aggregate(age ~ gender, FUN = mean, na.rm = T))
-```
-
-
-The pipe
-========================================================
-
-```{r}
-data("police_killings")
-
-police_killings %>%
-  mutate(year_born = year - age) %>%
-  filter(raceethnicity == "White") %>%
-  group_by(gender) %>%
-  summarise(mean = mean(age, na.rm = T))
-```
-
-The pipe
-========================================================
-
-Base R:
-
-```{r, eval = F}
-police_killings$year_born <- police_killings$year - police_killings$age
-police_killings <- police_killings[police_killings$raceethnicity == "White", ]
-with(police_killings, aggregate(age ~ gender, FUN = mean, na.rm = T))
-```
-
-dplyr:
-
-```{r, eval = F}
-police_killings %>%
-  mutate(year_born = year - age) %>%
-  filter(raceethnicity == "White") %>%
-  group_by(gender) %>%
-  summarise(mean = mean(age, na.rm = T))
-```
-
-The pipe
-============================================================
-
-* x %>% f is equivalent to f(x)
-
-* The pipe carries the previous result into the next function
-
-* Best thing: you didn't have to create an object
-
-* This mantains a logical and clean workflow
-
-
-============================================================
-
-# Data transformation with dplyr
-
-
-Data transformation with dplyr
-============================================================
-
-`dplyr` is a package to do data manipulation or data wrangling.
-
-Data transformation with dplyr
-============================================================
-
-dplyr contains 'verbs' which makes data manipulation very intuitive.
-
-These are:
-
-* `mutate()`
-* `select()`
-* `filter()`
-* `arrange()`
-* `group_by()`
-* `summarise()`
-* `rename()`
-
-Data transformation with dplyr
-============================================================
-
-They are so intuitive that even reading them can tell you what they do:
-
-```{r}
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  select(gender, age, year, ethnicity, city) %>%
-  mutate(year_born = age - year) %>%
-  group_by(gender, ethnicity) %>%
-  filter(gender == "Male") %>%
-  summarise(average_age = mean(age, na.rm = T)) %>%
-  arrange(average_age)
-```
-
-Can you tell what I'm doing?
-
-Data transformation with dplyr
-============================================================
-
-Verb structure:
-
-```{r, eval = F}
-
-select(.data, variable_name, variable_name)
-
-mutate(.data, new_name = contents, other_new_var = contents)
-
-group_by(.data, variable_name, variable_name)
-
-filter(.data, logical_statement, other_logical_statemente)
-
-summarise(.data, new_var = contents, new_var = contets)
-
-arrange(.data, var_to_sort_by, var_to_sort_by)
-
-```
-
-
-============================================================
-
-# All of these functions accept and return a data frame!
-
-Data transformation with dplyr
-============================================================
-
-Let's construct an expression ourselves.
-
-First, let's pipe the data frame `police_killings` and change the name of `raceethnicity` to `ethnicity` using the `rename()` verb. Remember, the new variable name comes before the `=` and the old variable name comes after the `=`.
-
-Data transformation with dplyr
-============================================================
-
-```{r, eval = F}
-police_killings %>%
-  rename(ethnicity = raceethnicity)
-```
-
-## What do we get back?
-
-Extend the pipeline to `filter()` only `Male` from the variable `gender` ( Hint: `gender should equal "Male"`). After that, pipe the call to `group_by()` the state.
-
-Data transformation with dplyr
-============================================================
-
-```{r, eval = F}
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  filter(gender == "Male") %>%
-  group_by(state)
-```
-
-## What do we get back?
-
-- Extend the pipeline by using the `summarise()` function and create the new variable `avg_black` and `avg_white` which calculates the proportion of black and white deaths for each state.
-
-### I know this one might be hard but at least reason about it!
-
-Data transformation with dplyr
-============================================================
-
-```{r, eval = F}
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  filter(gender == "Male") %>%
-  group_by(state) %>%
-  summarise(avg_white = mean(ethnicity == "White", na.rm = T),
-            avg_black = mean(ethnicity == "Black", na.rm = T))
-```
-
-## What do we get back?
-
-- Finally, `arrange()` the new data set by the `avg_black()` variable
-
-Data transformation with dplyr
-============================================================
-
-```{r, eval = F}
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  filter(gender == "Male") %>%
-  group_by(state) %>%
-  summarise(avg_white = mean(ethnicity == "White", na.rm = T),
-            avg_black = mean(ethnicity == "Black", na.rm = T)) %>%
-  arrange(avg_black)
-```
-
-## What do we get back?
-
-Data transformation with dplyr
-============================================================
-
-```{r, echo = F}
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  filter(gender == "Male") %>%
-  group_by(state) %>%
-  summarise(avg_white = mean(ethnicity == "White", na.rm = T),
-            avg_black = mean(ethnicity == "Black", na.rm = T)) %>%
-  arrange(avg_black)
-```
 
 Data transformation with dplyr
 ============================================================

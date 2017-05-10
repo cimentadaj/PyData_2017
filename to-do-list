@@ -1,1 +1,17 @@
-- copy how all verbs work similarly from page 45.
+- Explain that arrange sorts NA's at the end
+- Make some examples with select() helpers
+- Remember to add an example with ungroup() to show how you can roll back to other analysis
+- include slide() to choose specific rows
+- Talk about geom_freqpoly instead of histogram for groups
+- Include geom_tile() because it's very common in Data Science
+- Use cut_width or cut_number on the fly
+- Don't spend that much time on tibbles (cut the slides to maybe 1 or two) because Python users really don't care about old/new data frames.
+- But do show package?tibble for options.
+- Show why read_*() functions are batter than base R from page 128
+- talk about how functions are uniform in the tidyverse and how all arguments are named alike.
+- when talking about relational data, paste the table from page 187.
+- why loops are not advised in R?
+- talk about map, map2, map3, pmap.
+- talk about keep, discard
+
+- modelr and add_predicitons, add_residuals, data_grid, gather/spread_predictions
