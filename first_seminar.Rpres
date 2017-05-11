@@ -286,8 +286,7 @@ Tidying and transforming your data
 ============================================================
 
 `dplyr` is a package to do data manipulation.
-
-`dplyr` contains 'verbs' which makes data manipulation very intuitive.
+* It contains 'verbs' which makes data manipulation very intuitive.
 
 These are:
 
@@ -369,7 +368,7 @@ police_killings %>%
 * Extend the pipeline to `arrange()` avg_black.
 * Save the expression with the name `black_white_deaths`
 
-Data transformation with dplyr
+Tidying and transforming your data
 ============================================================
 
 ```{r, eval = F}
@@ -383,37 +382,207 @@ black_white_deaths <-
   arrange(avg_black)
 ```
 
-```{r}
-exp_data <-
-  police_killings %>%
-  mutate(date = zoo::as.yearmon(paste(month, year, sep = "-"), format = "%b-%Y")) %>%
-  select(state, date) %>%
-  complete(date, state)
+Tidying and transforming your data
+============================================================
+`dplyr` also has a bunch of 'helper' functions that allow you to do usual transformations.
 
-exp_data %>%
-  count(state, date) %>%
-  mutate(n_lagged = lag(n),
-         increase = n - n_lagged,
-         increase = ifelse(is.na(increase), n, increase)) %>%
-  ggplot(aes(date, increase, colour = state, group = state)) +
-  geom_point(alpha = 0.7) +
-  geom_line(alpha = 0.7) +
-  scale_colour_discrete(guide = F) +
-  facet_wrap(~ state) +
-  xlab("Date") +
-  ylab("Monthly increase in deaths relative to previous month")
+```{r}
+police_killings %>%
+  filter(between(age, 15, 25)) %>%
+  distinct(state)
 ```
 
-Data transformation with dplyr
+***
+
+```{r}
+police_killings %>%
+  transmute(
+    age,
+    age_groups = ntile(age, 5),
+    age_means = cummean(age),
+    age_rank = row_number(age),
+    n = n()
+  )
+```
+
+For a complete list see [here](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+
+Tidying and transforming your data
 ============================================================
-`dplyr` also has a bunch of 'helper' functions.
 
-For example:
-* `n()`
-* `lead()`
-* `lag()`
+`dplyr` also has a series of verbs for merging datasets. These are mostly equivalent
+to `merge` from `base` and `SQL` joins.
 
-## What do we get back?
+* `inner_join(x, y, by = index)` merges `y` to `x` and only retains rows that matched in both.
+* `left_join(x, y, by = index)` merges `y` to `x` but retains all rows in `x`.
+* `right_join(x, y, by = index)` merges `x` to `y` and retains all rows in `y`. Opposite of `left_join`.
+* `full_join(x, y, by = index)` merges `x` and `y` and retains rows from both datasets
+
+Tidying and transforming your data
+============================================================
+To those familiar with `base` `R` and `MySQL`
+
+dplyr              | merge
+-------------------|-------------------------------------------
+`inner_join(x, y)` | `merge(x, y)`
+`left_join(x, y)`  | `merge(x, y, all.x = TRUE)`
+`right_join(x, y)` | `merge(x, y, all.y = TRUE)`,
+`full_join(x, y)`  | `merge(x, y, all.x = TRUE, all.y = TRUE)`
+
+dplyr                        | SQL
+-----------------------------|-------------------------------------------
+`inner_join(x, y, by = "z")` | `SELECT * FROM x INNER JOIN y USING (z)`
+`left_join(x, y, by = "z")`  | `SELECT * FROM x LEFT OUTER JOIN y USING (z)`
+`right_join(x, y, by = "z")` | `SELECT * FROM x RIGHT OUTER JOIN y USING (z)`
+`full_join(x, y, by = "z")`  | `SELECT * FROM x FULL OUTER JOIN y USING (z)`
+
+Taken from [R4DS](https://www.amazon.es/R-Data-Science-Garrett-Grolemund/dp/1491910399/ref=sr_1_1?ie=UTF8&qid=1494494889&sr=8-1&keywords=r+for+data+science), page 187.
+
+Tidying and transforming your data
+============================================================
+Are monthly police deaths correlated with monthly deaths killed by the police?
+
+```{r}
+url <- "https://raw.githubusercontent.com/cimentadaj/PyData_2017/master/data/police_deaths.csv"
+
+police_deaths <-
+  read_csv(url) %>%
+  filter(year == "2015") %>%
+  count(month = lubridate::month(date, label = T, abbr = F), states_death)
+```
+
+```{r}
+police_killings %>%
+  count(state, month) %>%
+  left_join(police_deaths, by = c("state" = "states_death", "month")) %>%
+  # Why is state different than month?
+  ungroup() %>% # Why do we ungroup()?
+  summarize(correlation = cor(n.x, n.y, use = "complete.obs"))
+```
+
+Tidying and transforming your data
+============================================================
+
+Finally, tidying your data cannot be finished without talking about the main verbs from the `tidyr` package.
+
+* `gather()` turns several columns into a stacked column.
+* `spread()` turns a stacked column into several columns.
+* `separate()` turns a column into several columns.
+* `unite()` turns several columns into one.
+* `nest()` creates a list-column.
+
+Tidying and transforming your data
+============================================================
+
+```{r}
+(stacked_df <-
+  police_killings %>%
+  select(state, ends_with("_income")) %>%
+  gather(type_income, income, -state)) # Turns a wide dataset into a stacked column
+```
+***
+```{r}
+stacked_df %>%
+  separate(type_income, c('type', 'delete'), sep = "_") %>% # separate into two
+  mutate(
+    type = recode(type,
+                  "p" = "personal",
+                  "h" = "household",
+                  "comp" = "hh/comp")
+  ) %>%
+  select(-delete)
+```
+
+
+Tidying and transforming your data
+============================================================
+Does the average age at death differ by gender and months?
+
+```{r}
+police_killings %>% 
+  unite(month_year, month, year, sep = "-") %>% # unite several columns into one
+  group_by(month_year, gender) %>%
+  summarize(mean_age = mean(age, na.rm = T)) %>%
+  spread(gender, mean_age) # turn stacked into wide
+```
+
+Tidying and transforming your data
+============================================================
+
+Finally, there's `nest()`. `nest()` turns grouped data frame into list-columns.
+
+```{r}
+(state_nested <-
+   police_killings %>%
+   group_by(state) %>%
+   nest())
+```
+
+This allows us to keep everything organized into compact list-columns.
+
+Iteration and modeling
+========================================================
+
+* Loops are not used very often in R because the can be very slow
+* Loops in R are slow for the same reason any interpreted language is slow: every operation carries around a lot of extra baggage.
+* For that reason, we have the apply family.
+* The apply family is an efficient application of for loops.
+
+See [here](http://stackoverflow.com/questions/7142767/why-are-loops-slow-in-r) for a more elaborate answer
+
+```{r, eval = F}
+value <-1:10^3
+
+loop_tester <- function(val) {
+  empty <- 0
+  for (i in seq_along(val)) empty <- c(empty, log(val[i]))
+  empty
+}
+### Do not run at the conference
+microbenchmark::microbenchmark(
+  loop = loop_tester(value), # 273 miliseconds
+  apply = sapply(value, function(x) log(x)) # 7 miliseconds
+)
+### Do not run at the conference
+```
+
+Iteration and modeling
+========================================================
+
+Instead of the `apply` family and `for()`, the `tidyverse` has the `map` family from the `purrr` package.
+
+All functions are consistent with each other and they fit perfectly with the philosophy of the tidyverse.
+
+* `map()` iterates over an object and **always** returns a list
+* `map2()` iterates over two objects and **always** returns a list
+* `map3()` iterates over three objects and **always** returns a list
+* `pmap()` iterates in parallel over a list with `p` objects and **always** returns a list
+
+All of these functions are very strict about what they return, so for each of these there's an equivalent:
+* `*_chr()` returns a character vector of length 1
+* `*_lgl()` returns a logical vector of length 1
+* `*_dbl()` returns a double vector of length 1
+* `*_int()`returns a integer vector of length 1
+
+These are particularly useful for programming with, to avoid unexpected errors.
+
+Iteration and modeling
+========================================================
+
+In which states does the % of blacks living explains the poverty rate better?
+
+```{r}
+state_nested %>% # remember this dataset?
+  mutate(model1 = map(data, function(x) lm(pov ~ share_black, data = x)),
+         r_square = map2_dbl(model1, data, ~ modelr::rsquare(.x, .y)),
+         n = map_dbl(model1, nobs)) %>%
+  select(state, r_square, n) %>%
+  arrange(desc(r_square))
+```
+
+Neat pipeline, eh?
+
+Perfect fit because we have only two observations
 
 Data visualization
 ========================================================
@@ -751,6 +920,31 @@ Benefits of this workflow:
 - Easy to read from left to right
 - No OBJECTS were created in the process
 - Allows you to think about your questions rather than on programming
+
+Data transformation with dplyr
+============================================================
+
+```{r}
+exp_data <-
+  police_killings %>%
+  mutate(date = zoo::as.yearmon(paste(month, year, sep = "-"), format = "%b-%Y")) %>%
+  select(state, date) %>%
+  complete(date, state)
+
+exp_data %>%
+  count(state, date) %>%
+  mutate(n_lagged = lag(n),
+         increase = n - n_lagged,
+         increase = ifelse(is.na(increase), n, increase)) %>%
+  ggplot(aes(date, increase, colour = state, group = state)) +
+  geom_point(alpha = 0.7) +
+  geom_line(alpha = 0.7) +
+  scale_colour_discrete(guide = F) +
+  facet_wrap(~ state) +
+  xlab("Date") +
+  ylab("Monthly increase in deaths relative to previous month")
+```
+
 
 
 Data import with haven and readr
