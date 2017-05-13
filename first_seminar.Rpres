@@ -160,6 +160,19 @@ Several arguments are set to usual defaults:
 
 `?locale`
 
+Import
+============================================================
+
+The `tidyverse` contains other packages to read other types of data structure.
+
+* Package DBI (e.g. RMySQL, RSQLite, RPostgreSQL etc) allows you to run SQL queries against a database and return a data frame.
+
+* For hierarchical data: use `jsonlite` (by Jeroen Ooms) for json, and `xml2` for XML.
+
+* `httr` for web apis and `rvest` for web scraping
+
+* `feather` for sharing with Python and other languages.
+
 Tidying your data
 ========================================================
 
@@ -443,10 +456,10 @@ Tidying and transforming your data
 Are monthly police deaths correlated with monthly deaths killed by the police?
 
 ```{r}
-url <- "https://raw.githubusercontent.com/cimentadaj/PyData_2017/master/data/police_deaths.csv"
+url_deaths <- "https://raw.githubusercontent.com/cimentadaj/PyData_2017/master/data/police_deaths.csv"
 
 police_deaths <-
-  read_csv(url) %>%
+  read_csv(url_deaths) %>%
   filter(year == "2015") %>%
   count(month = lubridate::month(date, label = T, abbr = F), states_death)
 ```
@@ -572,72 +585,127 @@ Iteration and modeling
 In which states does the % of blacks living explains the poverty rate better?
 
 ```{r}
-state_nested %>% # remember this dataset?
+(models <-
+  state_nested %>% # remember this dataset?
   mutate(model1 = map(data, function(x) lm(pov ~ share_black, data = x)),
          r_square = map2_dbl(model1, data, ~ modelr::rsquare(.x, .y)),
-         n = map_dbl(model1, nobs)) %>%
-  select(state, r_square, n) %>%
-  arrange(desc(r_square))
+         n = map_dbl(model1, nobs)))
 ```
 
 Neat pipeline, eh?
 
 Perfect fit because we have only two observations
 
-Data visualization
+Data visualization with ggplot2
 ========================================================
+
+Visualizing data is often much better than tables because it allows us to see patterns that we wouldn't otherwise. 
+
+* `ggplot2` is one of the hallmark packages of the `tidyverse`. 
+* It's so widespread that it was also [implemented in `python` as well](http://ggplot.yhathq.com/).
+* It's an implementation of [The Grammar of Graphics by Leland Wilkinson](https://www.amazon.com/Grammar-Graphics-Statistics-Computing/dp/0387245448)
+
+
 ggplot structure:
 
 ```{r, fig.width = 15}
-ggplot(data = police_killings) +
-  geom_point(mapping = aes(x = as.numeric(pov), y = pop))
+ggplot(data = police_killings, aes(x = as.numeric(pov), y = pop)) +
+  geom_point() +
+  labs(x = "Tract poverty rate", y = "Tract population")
 ```
 
-Data visualization
+Data visualization with ggplot2
 ========================================================
 
-The `ggplot` function "opens" the data and the `geom` function specifies the type of plot with the variables that will be used.
-
-The general structure is like this:
-
 ```{r, echo=T, eval = F}
-ggplot(data = <DATA>) + 
-  <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>))
+ggplot(data = <DATA>, mapping = aes(<MAPPINGS>)) + 
+  <GEOM_FUNCTION>() +
+  <GEOM_FUNCTION>() +
+  <GEOM_FUNCTION>() +
+  ...
 ```
 
-Data visualization
+* Within the `ggplot` call, `police_killings` is set as the lookup environment.
+* The `geom`(metric) function specifies the type of plot.
+* Each `geom` is a different layer that is superimposed over the other
+* The `data` and `mapping` arguments get passed on to the `geom` functions (so each layer
+will be using the same data, but that could by different).
+
+Data visualization with ggplot2
+========================================================
+For example...
+
+```{r}
+police_killings$pov <- as.numeric(police_killings$pov)
+police_killings$p_income <- as.numeric(police_killings$p_income)
+
+ggplot(police_killings, aes(pov, p_income)) +
+  geom_point() +
+  geom_smooth()
+```
+
+We could've excluded geom_point() and only get the smoothed line.
+
+Data visualization with ggplot2
+========================================================
+We could also use two different datasets on the same plot...
+
+```{r, fig.width = 15}
+other_data <-
+  police_killings %>%
+  group_by(nat_bucket) %>%
+  summarize(max_pov = mean(pov),
+            max_pincome = mean(p_income))
+
+ggplot(police_killings, aes(pov, p_income, colour = as.factor(nat_bucket))) +
+  geom_point(alpha = 0.2) +
+  geom_point(data = other_data, aes(max_pov, max_pincome), size = 4)
+```
+
+
+Data visualization with ggplot2
+========================================================
+If we added `geom_smooth(method = "lm")` to the previous what would we get back? (lm simply stands for linear model, instead of the default non-linear slope)
+
+* A slope for the underlying x-y relationship
+
+* One slope following the relationship of the four means
+
+* Four slopes for each `nat_bucket` group.
+
+
+Data visualization with ggplot2
+========================================================
+
+```{r, fig.width = 15}
+ggplot(police_killings, aes(pov, p_income, colour = as.factor(nat_bucket))) +
+  geom_point(alpha = 0.2) +
+  geom_point(data = other_data, aes(max_pov, max_pincome), size = 4) +
+  geom_smooth(method = "lm")
+```
+
+Data visualization with ggplot2
 ========================================================
 
 How many geoms (plots)?
 
-- `geom_point()`
-- `geom_bar()`
+- `geom_point()` for scatterplots
+- `geom_bar()` for barplot
 - `geom_histogram()`
 - `geom_boxplot()`
-- `geom_density()`
-- `geom_line()`
+- `geom_density()` for density plots
+- `geom_line()` for line plots (usually time-series plots)
 - `geom_smooth()`
-- And a bunch more  
+- And a bunch more
 
 [all geoms](http://sape.inf.usi.ch/quick-reference/ggplot2/geom)  
 [all ggplot2 extensions](http://www.ggplot2-exts.org/gallery/)
 
 Data visualization
 ========================================================
-
-Let's look at the data again..
-
-```{r, echo = F}
-police_killings
-```
-
-Data visualization
-========================================================
+Setting visual properties
 
 ```{r, eval = F}
-police_killings$pov <- as.numeric(police_killings$pov)
-police_killings$p_income <- as.numeric(police_killings$p_income)
-
 # colour
 ggplot(data = police_killings) +
   geom_point(mapping = aes(x = pov, y = pop,
@@ -671,7 +739,7 @@ ggplot(data = police_killings) +
 
 # size
 ggplot(data = police_killings) +
-  geom_point(mapping = aes(x = pov, y = pop), size = 2.5)
+  geom_point(mapping = aes(x = pov, y = pop), size = 2)
 
 # shape
 ggplot(data = police_killings) +
@@ -679,7 +747,7 @@ ggplot(data = police_killings) +
 
 # alpha (transparency)
 ggplot(data = police_killings) +
-  geom_point(mapping = aes(x = pov, y = pop), alpha = 0.2)
+  geom_point(mapping = aes(x = pov, y = pop), size = 4,alpha = 0.2)
 ```
 
 Data visualization
@@ -690,10 +758,10 @@ Aesthetics vary by `geom_*()` functions so you should have a look at the documen
 - `alpha`
 - `colour`
 - `fill`
-- `group`
+- `group` to show line plots by groups
 - `shape`
 - `size`
-- `stroke`
+- `stroke` to control the width of the lines in dots
 
 are common ones..
 
@@ -746,7 +814,6 @@ Too many dots! It doesn't look that nice. Let's add `alpha = 0.3`
 
 Data visualization
 ========================================================
-
 Answer:
 
 ```{r}
@@ -764,7 +831,7 @@ Let's color counties based on whether they are above/below the mean unemployment
 
 Hint:
 - aesthetic = `colour` or `color`
-- variable = `as.numeric(police_killings$urate) > 0.11`
+- variable = `as.numeric(urate) > mean(urate, na.rm = T)`
 
 Data visualization
 ========================================================
@@ -776,7 +843,7 @@ ggplot(data = police_killings) +
   geom_point(aes(x = as.numeric(share_black),
                  y = as.numeric(h_income),
                  size = pop,
-                 colour = as.numeric(police_killings$urate) > 0.11),
+                 colour = as.numeric(urate) > mean(urate, na.rm = T)),
              alpha = 0.30)
 ```
 
@@ -784,14 +851,14 @@ ggplot(data = police_killings) +
 Data visualization
 ========================================================
 
-Let's move everything to the `ggplot()` call
+Let's move the `aes` argument to the `ggplot()` call because want to add another layer.
 
 ```{r, eval = F}
 ggplot(data = police_killings,
        aes(x = as.numeric(share_black),
                  y = as.numeric(h_income),
                  size = pop,
-                 colour = as.numeric(police_killings$urate) > 0.11)) +
+                 colour = as.numeric(urate) > mean(urate, na.rm = T))) +
   geom_point(alpha = 0.30)
 ```
 
@@ -805,42 +872,12 @@ Finally, let's add the a regression line for each group:
 ggplot(data = police_killings,
        aes(x = as.numeric(share_black),
            y = as.numeric(h_income),
-           colour = as.numeric(police_killings$urate) > 0.11)) +
+           colour = as.numeric(urate) > mean(urate, na.rm = T))) +
   geom_point(aes(size = pop), alpha = 0.30) +
   geom_smooth(method = "lm")
 ```
 
 So much done with just a few lines!
-
-Data visualization
-========================================================
-
-Other graphs:
-
-```{r}
-ggplot(police_killings, aes(x = age)) +
-  geom_histogram(bins = 55)
-```
-
-Data visualization
-========================================================
-
-Other graphs:
-
-```{r}
-ggplot(police_killings, aes(x = raceethnicity)) +
-  geom_bar()
-```
-
-Data visualization
-========================================================
-
-Other graphs:
-
-```{r}
-ggplot(police_killings, aes(x = raceethnicity, y = age)) +
-  geom_boxplot()
-```
 
 Data visualization
 ========================================================
@@ -852,70 +889,127 @@ To learn ggplot2:
 [ggplot2 book by its author](http://ggplot2.org/book/)  
 [R for Data Science](http://r4ds.had.co.nz/)  
 
-* But also wait for the third seminar given by Robert ;)
+Transformation, modeling and visualization
+============================================================
+
+The strength of the `tidyverse` becomes obvious when we combine all of these packages together. We've used the `dplyr` and `tidyr` tools to create a summarised dataset. This dataset is informative but we need to visualize it.
+
+For example, let's take the `models` data from before.
+
+```{r, echo = F}
+models
+```
+
+Transformation, modeling and visualization
+============================================================
+
+Let's plot each state as the `x` axis and `r_square` as the `y` axis with the `fill` as a function of `n`.
+
+```{r}
+ggplot(models, aes(reorder(state, -r_square), r_square, fill = n)) +
+  geom_col() +
+  coord_flip()
+```
 
 Data transformation with dplyr
 ============================================================
 
-Here's when the strength of the `tidyverse` becomes obvious. We've used the `dplyr` tools to create a summarised dataset. This dataset is informative but we need to visualize it.
+Also from the `tidyverse`, the `broom` package turns models into data frames ready for visualization. 
 
-## Can you think how we can connect the dplyr tools with the ggplot tools?
+* We can use the `tidy` function to get the model output into a table.
+
+```{r}
+cleaned_df <-
+  police_killings %>%
+  mutate(gunshot_ornot = ifelse(cause == "Gunshot", 1, 0),
+         race = case_when(.$raceethnicity == "Black" ~ 1,
+                          .$raceethnicity == "White" ~ 0,
+                          TRUE ~ 2),
+         armed_dummy = case_when(.$armed == "No" ~ 0,
+                                 .$armed == "Firearm" ~ 1,
+                                 TRUE ~ 2))
+
+models_gunshot <-
+  cleaned_df %>%
+  split(.$race) %>%
+  map(~ glm(gunshot_ornot ~ as.character(armed_dummy), data = .x, family = 'binomial'))
+```
+
+Data transformation with dplyr
+============================================================
+We finish by visualizing
+
+```{r}
+models_gunshot %>%
+  map(broom::tidy) %>%
+  enframe() %>%
+  unnest() %>%
+  select(name, term, estimate, std.error) %>%
+  mutate(lower = estimate - std.error * 2,
+         upper = estimate + std.error * 2) %>%
+  ggplot(aes(reorder(term, -estimate), estimate, colour = name)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.05) +
+  scale_x_discrete(labels = c("Not armed", "Firearm", "Everything else")) +
+  labs(x = "Was the subject armed when killed?",
+       y = "Estimate of getting killed by a gunshot")
+```
 
 Data transformation with dplyr
 ============================================================
 
-This is one way of plotting the previous data.
+We can also just look at predicted probabilities for specific groups.
+
+```{r}
+cleaned_df %>%
+  split(.$race) %>%
+  map(modelr::data_grid, race, armed_dummy) %>%
+  map2(models_gunshot, function(x, y) {
+    x[["pred"]] <- predict(y, newdata = x, type = "response");
+    x
+  }) %>%
+  bind_rows() %>%
+  ggplot(aes(as.factor(armed_dummy), pred, colour = as.factor(race))) +
+  geom_point() +
+  scale_colour_discrete(name = "Race", labels = c("White", "Black", "Everything else")) +
+  scale_x_discrete(labels = c("Not armed", "Firearm", "Everything else")) +
+  labs(x = "Was the subject armed when killed?", y = "Probs of getting killed by a gunshot")
+```
+
+Data transformation with dplyr
+============================================================
+
 ```{r, eval = F}
-ggplot(summary_police) +
-  geom_col(aes(state, avg_black), fill = "blue", alpha = 0.3) +
-  geom_col(aes(state, avg_white), fill = "red", alpha = 0.3) +
-  coord_flip()
-```
+summarized_df <- 
+  read_csv(url) %>%
+  mutate(gunshot_ornot = ifelse(cause == "Gunshot", 1, 0),
+         race = case_when(.$raceethnicity == "White" ~ 0, .$raceethnicity == "Black" ~ 1,
+                          TRUE ~ 2),
+         armed_dummy = case_when(.$armed == "No" ~ 0, .$armed == "Firearm" ~ 1, TRUE ~ 2)
+  ) %>% split(.$race)
 
-We specify the `data` name and we'll add two layers of bar graphs, one showing the proportion of black deaths and the other the proportion of white deaths for each state. Because both barplots will overlap, we add a certain degree of transparency so we can spot differences.
+models_gunshot <-
+  map(summarized_df ~ glm(gunshot_ornot ~ as.character(armed_dummy), data = .x, family = 'binomial'))
+
+summarized_df %>%
+  map(modelr::data_grid, race, armed_dummy) %>%
+  map2(models_gunshot, function(x, y) {
+    x[["pred"]] <- predict(y, newdata = x, type = "response");
+    x
+  }) %>%
+  bind_rows() %>%
+  ggplot(aes(as.factor(armed_dummy), pred, colour = as.factor(race))) +
+  geom_point() +
+  scale_colour_discrete(name = "Race", labels = c("White", "Black", "Everything else")) +
+  scale_x_discrete(labels = c("Not armed", "Firearm", "Everything else")) +
+  labs(x = "Was the subject armed when killed?", y = "Probs of getting killed by a gunshot")
+```
 
 Data transformation with dplyr
 ============================================================
-
-```{r, echo = F, fig.width = 18, fig.height = 10}
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  filter(gender == "Male") %>%
-  group_by(state) %>%
-  summarise(avg_white = mean(ethnicity == "White", na.rm = T),
-            avg_black = mean(ethnicity == "Black", na.rm = T)) %>%
-  arrange(avg_black) %>%
-  ggplot() +
-  geom_col(aes(state, avg_black), fill = "blue", alpha = 0.3) +
-  geom_col(aes(state, avg_white), fill = "red", alpha = 0.3) +
-  coord_flip()
-```
-
-Data transformation with dplyr
-============================================================
-
-How do we connect both expressions?
-
-## The PIPE at the rescue
-
-Data transformation with dplyr
-============================================================
-
-```{r, eval = F}
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  filter(gender == "Male") %>%
-  group_by(state) %>%
-  summarise(avg_white = mean(ethnicity == "White", na.rm = T),
-            avg_black = mean(ethnicity == "Black", na.rm = T)) %>%
-  arrange(avg_black) %>%
-  ggplot() +
-  geom_col(aes(state, avg_black), fill = "blue", alpha = 0.3) +
-  geom_col(aes(state, avg_white), fill = "red", alpha = 0.3) +
-  coord_flip()
-```
 
 Benefits of this workflow:
+
 - Intuitive verb names
 - Easy to read from left to right
 - No OBJECTS were created in the process
@@ -944,70 +1038,6 @@ exp_data %>%
   xlab("Date") +
   ylab("Monthly increase in deaths relative to previous month")
 ```
-
-
-
-Data import with haven and readr
-============================================================
-
-```{r, eval = F}
-library(readr)
-library(haven)
-library(readxl)
-
-read_csv() # CSV, comma delimited
-read_stata() # Stata file: supports versions 8-14.
-read_spss() # SPSS (.sav) files
-read_sas() # SAS files
-read_excel() # Read .xls or .xlsx
-```
-
-Data import with haven and readr
-============================================================
-
-- Package DBI (e.g. RMySQL, RSQLite, RPostgreSQL etc) allows you to run SQL queries against a database and return a data frame.
-
-- For hierarchical data: use `jsonlite` (by Jeroen Ooms) for json, and `xml2` for XML. Jenny Bryan has some excellent worked examples at https://jennybc.github.io/purrr-tutorial/examples.html.
-
-Data import with haven and readr
-============================================================
-
-```{r}
-library(readr)
-dir_link <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/police-killings/police_killings.csv"
-
-police_killings <- read_csv(dir_link)
-```
-
-Let's put everything together
-============================================================
-
-```{r, eval = F}
-library(tidyverse)
-library(readr)
-
-dir_link <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/police-killings/police_killings.csv"
-
-police_killings <- read_csv(dir_link)
-
-police_killings %>%
-  rename(ethnicity = raceethnicity) %>%
-  filter(gender == "Male") %>%
-  group_by(state) %>%
-  summarise(avg_white = mean(ethnicity == "White", na.rm = T),
-            avg_black = mean(ethnicity == "Black", na.rm = T)) %>%
-  arrange(avg_black) %>%
-  ggplot() +
-  geom_col(aes(state, avg_black), fill = "blue", alpha = 0.3) +
-  geom_col(aes(state, avg_white), fill = "red", alpha = 0.3) +
-  coord_flip()
-```
-
-Rstudio workflow
-============================================================
-
-Yes, HOMEWORK:
-http://r4ds.had.co.nz/workflow-projects.html
 
 ============================================================
 
