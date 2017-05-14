@@ -1,7 +1,0 @@
-- Explain that arrange sorts NA's at the end
-- include slide() to choose specific rows
-- Include geom_tile() because it's very common in Data Science
-- Show why read_*() functions are batter than base R from page 128
-- talk about keep, discard
-
-- modelr and add_predicitons, add_residuals, data_grid, gather/spread_predictions
