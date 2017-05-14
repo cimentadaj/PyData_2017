@@ -1,5 +1,4 @@
 <style>
-
 bold {font-weight: bold; }
 
 .section .reveal .state-background {
@@ -19,13 +18,14 @@ bold {font-weight: bold; }
     width:100%;
 }
 
+
 </style>
 
 An introduction to the tidyverse
 ========================================================
 author: Jorge Cimentada  
 date: 19th of May of 2017  
-class: illustration
+class: section
 font-family: 'Helvetica'
 width: 1800
 height: 900
@@ -103,35 +103,47 @@ library(tidyverse)
 ```
 
 - These are the main packages and the ones that are loaded automatically by the tidyverse
-- Today we will talk about the core tidyverse packages, ocassionaly mentioning which other packages are useful in certain situations.
+
+- We will talk about the core packages, ocassionaly touching upon other packages that are useful in certain situations.
 
 Import
 ========================================================
 
 ```{r, echo = F}
 library(tidyverse)
+theme_set(theme_gray(base_size = 26))
 ```
 
-Formats:
+The usual plain-text files can be read/written with:
 
+* read_*()
+* write_*()
+
+Formats:
 * csv
-* semi-colon delim
-* text
-* fixed-width-file
+* delim (read_delim)
+* text (read_table)
+* fixed-width-file (read_fwf)
 * json
 * xml and xlsx
 * databases
 * etc.. see [here](https://github.com/tidyverse/tidyverse)
 
-The usual plain-text files can be read/written with:
+Once you're familiar with one or two read_*() functions, you're pretty much familiar with
+all other read_*() functions.
 
-read_*()
-write_*()
+Import
+============================================================
 
 But other formats have slightly different syntax (For example, databases or jsons).
 
-Once you're familiar with one or two read_*() functions, you're pretty much familiar with
-all other read_*() functions.
+* Package DBI (e.g. RMySQL, RSQLite, RPostgreSQL etc) allows you to run SQL queries against a database and return a data frame.
+
+* For hierarchical data: use `jsonlite` for json, and `xml2` for XML.
+
+* `httr` for web apis and `rvest` for web scraping
+
+* `feather` for sharing with Python and other languages.
 
 Import
 ========================================================
@@ -160,40 +172,25 @@ Several arguments are set to usual defaults:
 
 `?locale`
 
-Import
-============================================================
-
-The `tidyverse` contains other packages to read other types of data structure.
-
-* Package DBI (e.g. RMySQL, RSQLite, RPostgreSQL etc) allows you to run SQL queries against a database and return a data frame.
-
-* For hierarchical data: use `jsonlite` (by Jeroen Ooms) for json, and `xml2` for XML.
-
-* `httr` for web apis and `rvest` for web scraping
-
-* `feather` for sharing with Python and other languages.
-
 Tidying your data
 ========================================================
 
 # Who uses data frames in R?
 
-Data frames are, in most of the cases, the primary unit of analysis in R. It allows you to have your data in a rectangular format, with related objects occupying a row-column cell. Data frames have been around for the past 10-20 years, since S, the predecessor of R.
-
 Tidying your data
 ========================================================
+right: 50
 
 ```{r, echo = F}
-options(tibble.width = 55)
-select(police_killings, name:month)
+options(tibble.width = 50)
+select(police_killings, name:month) %>% head(10)
 options(tibble.width = 70)
 ```
 
 ***
 
 ```{r, echo = F}
-select(police_killings, name:month) %>%
-  as.data.frame() %>%
+select(police_killings, name:gender) %>% as.data.frame() %>%
   head(10)
 ```
 
@@ -397,6 +394,7 @@ black_white_deaths <-
 
 Tidying and transforming your data
 ============================================================
+right: 55
 `dplyr` also has a bunch of 'helper' functions that allow you to do usual transformations.
 
 ```{r}
@@ -486,7 +484,7 @@ Finally, tidying your data cannot be finished without talking about the main ver
 
 Tidying and transforming your data
 ============================================================
-
+right: 60
 ```{r}
 (stacked_df <-
   police_killings %>%
@@ -496,7 +494,7 @@ Tidying and transforming your data
 ***
 ```{r}
 stacked_df %>%
-  separate(type_income, c('type', 'delete'), sep = "_") %>% # separate into two
+  separate(type_income, c('type', 'delete'), sep = "_") %>%
   mutate(
     type = recode(type,
                   "p" = "personal",
@@ -610,7 +608,7 @@ ggplot structure:
 
 ```{r, fig.width = 15}
 ggplot(data = police_killings, aes(x = as.numeric(pov), y = pop)) +
-  geom_point() +
+  geom_point(size = 4) +
   labs(x = "Tract poverty rate", y = "Tract population")
 ```
 
@@ -640,7 +638,7 @@ police_killings$pov <- as.numeric(police_killings$pov)
 police_killings$p_income <- as.numeric(police_killings$p_income)
 
 ggplot(police_killings, aes(pov, p_income)) +
-  geom_point() +
+  geom_point(size = 4) +
   geom_smooth()
 ```
 
@@ -658,14 +656,16 @@ other_data <-
             max_pincome = mean(p_income))
 
 ggplot(police_killings, aes(pov, p_income, colour = as.factor(nat_bucket))) +
-  geom_point(alpha = 0.2) +
-  geom_point(data = other_data, aes(max_pov, max_pincome), size = 4)
+  geom_point(alpha = 0.1, size = 4) +
+  geom_point(data = other_data, aes(max_pov, max_pincome), size = 7)
 ```
 
 
 Data visualization with ggplot2
 ========================================================
 If we added `geom_smooth(method = "lm")` to the previous what would we get back? (lm simply stands for linear model, instead of the default non-linear slope)
+
+Your possible options:
 
 * A slope for the underlying x-y relationship
 
@@ -679,8 +679,8 @@ Data visualization with ggplot2
 
 ```{r, fig.width = 15}
 ggplot(police_killings, aes(pov, p_income, colour = as.factor(nat_bucket))) +
-  geom_point(alpha = 0.2) +
-  geom_point(data = other_data, aes(max_pov, max_pincome), size = 4) +
+  geom_point(alpha = 0.2, size = 4) +
+  geom_point(data = other_data, aes(max_pov, max_pincome), size = 7) +
   geom_smooth(method = "lm")
 ```
 
@@ -747,7 +747,7 @@ ggplot(data = police_killings) +
 
 # alpha (transparency)
 ggplot(data = police_killings) +
-  geom_point(mapping = aes(x = pov, y = pop), size = 4,alpha = 0.2)
+  geom_point(mapping = aes(x = pov, y = pop), size = 4, alpha = 0.2)
 ```
 
 Data visualization
@@ -782,7 +782,7 @@ Hints:
 Data visualization
 ========================================================
 
-Answer:
+Correct answer:
 
 ```{r}
 ggplot(data = police_killings) +
@@ -802,7 +802,7 @@ Hints:
 Data visualization
 ========================================================
 
-Answer:
+Correct answer:
 
 ```{r}
 ggplot(data = police_killings) +
@@ -814,7 +814,7 @@ Too many dots! It doesn't look that nice. Let's add `alpha = 0.3`
 
 Data visualization
 ========================================================
-Answer:
+Correct answer:
 
 ```{r}
 ggplot(data = police_killings) +
@@ -836,7 +836,7 @@ Hint:
 Data visualization
 ========================================================
 
-Answer:
+Correct answer:
 
 ```{r}
 ggplot(data = police_killings) +
@@ -948,7 +948,7 @@ models_gunshot %>%
   mutate(lower = estimate - std.error * 2,
          upper = estimate + std.error * 2) %>%
   ggplot(aes(reorder(term, -estimate), estimate, colour = name)) +
-  geom_point() + 
+  geom_point(size = 4) + 
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.05) +
   scale_x_discrete(labels = c("Not armed", "Firearm", "Everything else")) +
   labs(x = "Was the subject armed when killed?",
@@ -970,36 +970,7 @@ cleaned_df %>%
   }) %>%
   bind_rows() %>%
   ggplot(aes(as.factor(armed_dummy), pred, colour = as.factor(race))) +
-  geom_point() +
-  scale_colour_discrete(name = "Race", labels = c("White", "Black", "Everything else")) +
-  scale_x_discrete(labels = c("Not armed", "Firearm", "Everything else")) +
-  labs(x = "Was the subject armed when killed?", y = "Probs of getting killed by a gunshot")
-```
-
-Data transformation with dplyr
-============================================================
-
-```{r, eval = F}
-summarized_df <- 
-  read_csv(url) %>%
-  mutate(gunshot_ornot = ifelse(cause == "Gunshot", 1, 0),
-         race = case_when(.$raceethnicity == "White" ~ 0, .$raceethnicity == "Black" ~ 1,
-                          TRUE ~ 2),
-         armed_dummy = case_when(.$armed == "No" ~ 0, .$armed == "Firearm" ~ 1, TRUE ~ 2)
-  ) %>% split(.$race)
-
-models_gunshot <-
-  map(summarized_df ~ glm(gunshot_ornot ~ as.character(armed_dummy), data = .x, family = 'binomial'))
-
-summarized_df %>%
-  map(modelr::data_grid, race, armed_dummy) %>%
-  map2(models_gunshot, function(x, y) {
-    x[["pred"]] <- predict(y, newdata = x, type = "response");
-    x
-  }) %>%
-  bind_rows() %>%
-  ggplot(aes(as.factor(armed_dummy), pred, colour = as.factor(race))) +
-  geom_point() +
+  geom_point(size = 4) +
   scale_colour_discrete(name = "Race", labels = c("White", "Black", "Everything else")) +
   scale_x_discrete(labels = c("Not armed", "Firearm", "Everything else")) +
   labs(x = "Was the subject armed when killed?", y = "Probs of getting killed by a gunshot")
@@ -1012,39 +983,37 @@ Benefits of this workflow:
 
 - Intuitive verb names
 - Easy to read from left to right
-- No OBJECTS were created in the process
+- Naming things is hard. Few objects were created in the process
 - Allows you to think about your questions rather than on programming
 
-Data transformation with dplyr
-============================================================
+<!-- Data transformation with dplyr -->
+<!-- ============================================================ -->
 
-```{r}
-exp_data <-
-  police_killings %>%
-  mutate(date = zoo::as.yearmon(paste(month, year, sep = "-"), format = "%b-%Y")) %>%
-  select(state, date) %>%
-  complete(date, state)
-
-exp_data %>%
-  count(state, date) %>%
-  mutate(n_lagged = lag(n),
-         increase = n - n_lagged,
-         increase = ifelse(is.na(increase), n, increase)) %>%
-  ggplot(aes(date, increase, colour = state, group = state)) +
-  geom_point(alpha = 0.7) +
-  geom_line(alpha = 0.7) +
-  scale_colour_discrete(guide = F) +
-  facet_wrap(~ state) +
-  xlab("Date") +
-  ylab("Monthly increase in deaths relative to previous month")
-```
+<!-- ```{r} -->
+<!-- police_killings %>% -->
+<!--   mutate(date = zoo::as.yearmon(paste(month, year, sep = "-"), format = "%b-%Y")) %>% -->
+<!--   complete(date, state) %>% -->
+<!--   count(state, date) %>% -->
+<!--   mutate(n_lagged = lag(n), -->
+<!--          increase = n - n_lagged, -->
+<!--          increase = ifelse(is.na(increase), n, increase)) %>% -->
+<!--   ggplot(aes(date, increase, colour = state, group = state)) + -->
+<!--   geom_point(alpha = 0.7) + -->
+<!--   geom_line(alpha = 0.7) + -->
+<!--   scale_colour_discrete(guide = F) + -->
+<!--   facet_wrap(~ state) + -->
+<!--   xlab("Date") + -->
+<!--   ylab("Monthly increase in deaths relative to previous month") -->
+<!-- ``` -->
 
 ============================================================
+
+* Read the book [here](http://r4ds.had.co.nz/), or even better, [buy it here](https://www.amazon.com/Data-Science-Transform-Visualize-Model/dp/1491910399/ref=sr_1_1?ie=UTF8&qid=1494753598&sr=8-1&keywords=R+for+data+science)
+
+* If you have further questions, meet me after the workshop
+* Or email me at cimentadaj@gmail.com
 
 # Thanks!
-## cimentadaj@gmail.com
-- If you want to be in our mailing list
-- Also, send feedback or want to propose a lecture/seminar
 
 <div align="center">
 <img src="./figures/tidyverse_pkg_stickers.png" width=800 height=530>
