@@ -34,6 +34,8 @@ height: 900
 <img src="./figures/logo_tidyverse.png" width=300 height=350>
 </div>
 
+today I will introduce you to the tidyverse, a series of packages designed to do data science and data analysis
+
 The philosophy of the tidyverse 
 ========================================================
 incremental: true
@@ -44,13 +46,19 @@ knitr::opts_chunk$set(fig.width = 15)
 
 - What is the tidyverse?
 
+It's a group of packages(about 20), that have been grouped together into one single package.
+
 - "The packages in the tidyverse share a common philosophy of data and R programming, and are designed to work together naturally." R4DS
+
+The neat thing about the tidyverse is that each package has been created with the other in mind, making them work together very naturally. Most of these packages have been created by Hadley Wickham, 
 
 - They've been created with the same data process in mind.
 
-Remember R packages have been created by thousands of users without a clear structure!
+Specifically around rectangular data
 
-The tidyverse is one attempt at unifying a philosophy of data analysis.
+- Remember R packages have been created by thousands of users without a clear structure!
+
+- The tidyverse is one attempt at unifying a philosophy of data analysis.
 
 What is the tidyverse?
 =======================================================
@@ -124,10 +132,6 @@ Formats:
 * delim (read_delim)
 * text (read_table)
 * fixed-width-file (read_fwf)
-* json
-* xml and xlsx
-* databases
-* etc.. see [here](https://github.com/tidyverse/tidyverse)
 
 Once you're familiar with one or two read_*() functions, you're pretty much familiar with
 all other read_*() functions.
@@ -141,7 +145,7 @@ But other formats have slightly different syntax (For example, databases or json
 
 * For hierarchical data: use `jsonlite` for json, and `xml2` for XML.
 
-* `httr` for web apis and `rvest` for web scraping
+* `httr` for web APIs and `rvest` for web scraping
 
 * `feather` for sharing with Python and other languages.
 
@@ -162,15 +166,11 @@ police_killings <- read_csv(url)
 police_killings <- read_delim(url, delim = ",")
 ```
 
-read_*() functions try to guess the class of each column using a set of standard parsing functions.
-
 Several arguments are set to usual defaults:
 * Column types are guessed using the first 1000 rows (problem?)
 * First row is assumed to be the header
 * The delimiter is set to be equal to the \* of read_*() (comma, semi-colon, etc..)
-* country-specific options are set to be US-centric, as R (dates, decimal points, timezonez)
-
-`?locale`
+* country-specific options are set to be US-centric, as R (dates, decimal points, timezones)
 
 Tidying your data with tibble
 ========================================================
@@ -208,10 +208,7 @@ The most obvious differences:
 * Tibbles print only a reasonable number of rows (have you ever restarted R because of printing a massive df?)
 * Each column has their respective type
 * Dimensions on top of each row
-
-Othe important differences:
 * Subseting `mtcars[, "mpg"]` returns a tibble (no more `drop = F`).
-* Not all functions work with tibbles, so remember to `as.data.frame()` your tibble
 
 Transforming you data with dplyr
 ========================================================
@@ -323,8 +320,6 @@ police_killings %>%
   arrange(average_age)
 ```
 
-Can you tell what I'm doing?
-
 Transforming you data with dplyr
 ============================================================
 
@@ -368,12 +363,8 @@ police_killings %>%
   group_by(state)
 ```
 
-
-## What do we get back?
-
-
 * Extend the pipeline using `summarise()` to create the new variables `avg_black` and `avg_white` which calculate the proportion of black and white deaths (remember to exclude NA's!).
-* Extend the pipeline to `arrange()` avg_black.
+* Extend the pipeline to `arrange()` `avg_black`.
 
 Transforming you data with dplyr
 ============================================================
@@ -408,8 +399,7 @@ police_killings %>%
     age,
     age_groups = ntile(age, 5),
     age_means = cummean(age),
-    age_rank = row_number(age),
-    n = n()
+    age_rank = row_number(age)
   )
 ```
 
@@ -421,11 +411,10 @@ Transforming you data with dplyr
 `dplyr` also has a series of verbs for merging datasets. These are mostly equivalent
 to `merge` from `base` and `SQL` joins.
 
-<div align="center">
-<img src="./figures/relation_data.png" width=800 height=650>
-</div>
-
-Taken from [here](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+* `inner_join(x, y, by = index)` merges `y` to `x` and only retains rows that matched in both.
+* `left_join(x, y, by = index)` merges `y` to `x` but retains all rows in `x`.
+* `right_join(x, y, by = index)` merges `x` to `y` and retains all rows in `y`.
+* `full_join(x, y, by = index)` merges `x` and `y` and retains rows from both datasets
 
 Transforming you data with dplyr
 ============================================================
@@ -484,8 +473,9 @@ Tidying your data with tidyr
 ============================================================
 
 ```{r}
-wide_df <- police_killings %>%
-  select(state, ends_with("_income"))
+wide_df <-
+  police_killings %>%
+  select(state, p_income, h_income, county_income)
 ```
 
 ```{r, echo = F}
@@ -511,8 +501,7 @@ stacked_df %>%
   mutate(
     type = recode(type,
                   "p" = "personal",
-                  "h" = "household",
-                  "comp" = "hh/comp")
+                  "h" = "household")
   ) %>%
   select(-delete)
 ```
