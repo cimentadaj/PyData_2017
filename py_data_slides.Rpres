@@ -133,8 +133,8 @@ Formats:
 * text (read_table)
 * fixed-width-file (read_fwf)
 
-Once you're familiar with one or two read_*() functions, you're pretty much familiar with
-all other read_*() functions.
+Once you're familiar with one or two read\_\*() functions, you're pretty much familiar with
+all other read\_\*() functions.
 
 Import with other packages
 ============================================================
@@ -987,9 +987,9 @@ We can tidy up our models and create some uncertainty intervals around the estim
 tidy_models <-
   models_gunshot %>%
   map(broom::tidy) %>%
-  enframe() %>%
-  unnest() %>%
-  mutate(lower = estimate - std.error * 2,
+  bind_rows() %>%
+  mutate(name = rep(c("1", "2", "3"), each = 3),
+         lower = estimate - std.error * 2,
          upper = estimate + std.error * 2)
 ```
 
