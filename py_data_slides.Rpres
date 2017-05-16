@@ -205,7 +205,7 @@ options(tibble.width = 110)
 ```
 
 The most obvious differences:
-* Tibbles print only a reasonable number of rows (have you ever restarted R because of printing a massive df?)
+* Reasonable number of rows (have you ever restarted R because of printing a massive df?)
 * Each column has their respective type
 * Dimensions on top of each row
 * Subseting `mtcars[, "mpg"]` returns a tibble (no more `drop = F`).
@@ -408,24 +408,14 @@ For a complete list see [here](https://www.rstudio.com/wp-content/uploads/2015/0
 Transforming you data with dplyr
 ============================================================
 
-`dplyr` also has a series of verbs for merging datasets. These are mostly equivalent
-to `merge` from `base` and `SQL` joins.
+`dplyr` also has a series of verbs for merging datasets.
 
 * `inner_join(x, y, by = index)` merges `y` to `x` and only retains rows that matched in both.
 * `left_join(x, y, by = index)` merges `y` to `x` but retains all rows in `x`.
 * `right_join(x, y, by = index)` merges `x` to `y` and retains all rows in `y`.
 * `full_join(x, y, by = index)` merges `x` and `y` and retains rows from both datasets
 
-Transforming you data with dplyr
-============================================================
-To those familiar with `base` `R` or `MySQL`
-
-dplyr              | merge
--------------------|-------------------------------------------
-`inner_join(x, y)` | `merge(x, y)`
-`left_join(x, y)`  | `merge(x, y, all.x = TRUE)`
-`right_join(x, y)` | `merge(x, y, all.y = TRUE)`,
-`full_join(x, y)`  | `merge(x, y, all.x = TRUE, all.y = TRUE)`
+<br>
 
 dplyr                        | SQL
 -----------------------------|-------------------------------------------
@@ -579,11 +569,12 @@ Instead of the `apply` family and `for()`, the `tidyverse` has the `map` family 
 * `map3()` iterates over three objects and **always** returns a list
 * `pmap()` iterates in parallel over a list with `p` objects and **always** returns a list
 
-All of these functions are very strict about what they return, so for each of these there's an equivalent:
+All of these functions have an equivalent function:
 * `*_chr()` returns a character vector of length 1
-* `*_lgl()` returns a logical vector of length 1
-* `*_dbl()` returns a double vector of length 1
-* `*_int()`returns a integer vector of length 1
+* `*_lgl()` ...
+* `*_dbl()` ...
+* `*_int()` ...
+
 
 Delete: All functions are consistent with each other and they fit perfectly with the philosophy of the tidyverse.
 Delete: These are particularly useful for programming with, to avoid unexpected errors.
@@ -635,7 +626,7 @@ ggplot(data = <DATA>, mapping = aes(<MAPPINGS>)) +
 ```
 
 * Within the `ggplot` call, `police_killings` is set as the lookup environment.
-* The `geom`(metric) function specifies the type of plot.
+* The `geom` function specifies the type of plot.
 * Each `geom` is a different layer that is superimposed over the other
 * The `data` and `mapping` arguments get passed on to the `geom` functions (so each layer
 will be using the same data, but that could by different).
@@ -686,7 +677,7 @@ ggplot(police_killings, aes(pov, p_income, colour = as.factor(nat_bucket))) +
 
 Data visualization with ggplot2
 ========================================================
-If we added `geom_smooth(method = "lm")` to the previous plt, what would we get back? (lm simply stands for linear model, instead of the default non-linear slope)
+If we added `geom_smooth(method = "lm")` to the previous plot, what would we get back? (lm simply stands for linear model, instead of the default non-linear slope)
 
 Your possible options:
 
