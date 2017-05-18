@@ -38,12 +38,20 @@ Presentation repository
 ========================================================
 * How to get the slides?
 
+<<<<<<< HEAD
 www.cimentadaj.github.io/PyData_2017/py_data_slides.html#/
 
 * Where's the Markdown file of this presentation?
 
 www.github.com/cimentadaj/PyData_2017
 
+=======
+https://cimentadaj.github.io/PyData_2017/py_data_slides.html#/
+
+* Where's the Markdown file of this presentation?
+
+https://github.com/cimentadaj/PyData_2017
+>>>>>>> dc420315957543a57811bb75a88fdf817f15e2e4
 
 The philosophy of the tidyverse 
 ========================================================
