@@ -34,8 +34,6 @@ height: 900
 <img src="./figures/logo_tidyverse.png" width=300 height=350>
 </div>
 
-today I will introduce you to the tidyverse, a series of packages designed to do data science and data analysis
-
 The philosophy of the tidyverse 
 ========================================================
 incremental: true
@@ -46,19 +44,9 @@ knitr::opts_chunk$set(fig.width = 15)
 
 - What is the tidyverse?
 
-It's a group of packages(about 20), that have been grouped together into one single package.
-
 - "The packages in the tidyverse share a common philosophy of data and R programming, and are designed to work together naturally." R4DS
 
-The neat thing about the tidyverse is that each package has been created with the other in mind, making them work together very naturally. Most of these packages have been created by Hadley Wickham, 
-
-- They've been created with the same data process in mind.
-
-Specifically around rectangular data
-
-- Remember R packages have been created by thousands of users without a clear structure!
-
-- The tidyverse is one attempt at unifying a philosophy of data analysis.
+- They've been created with the same data process in mind, specifically around rectangular data.
 
 What is the tidyverse?
 =======================================================
@@ -84,8 +72,6 @@ What is the tidyverse for?
 </div>
 
 <small>http://r4ds.had.co.nz/introduction.html</small>
-
-It covers all the important steps in the data analysis workflow. You start by importing the data, this can be a well structured csv or json file or something very messy you scraped from a website. Next, you have to tidy the data, or make it suitable for analysis and then you enter the 'interactive' section of data analysis. Here there's an interplay of creating/transforming variables, visualizing interesting patterns and try to model and explain these patterns. This process gets repeated iteratively until you reach a conclusion. That is the moment we communicate our results.
 
 What is the tidyverse?
 ======================================================
@@ -301,8 +287,6 @@ It contains 'verbs' which makes data manipulation very intuitive:
 * Sort by variables with `arrange()`
 * Apply operations by group with `group_by()`
 * Compute summary variables with `summarise()`
-
-Delete: These functions provide the verbs for a language of data manipulation
 
 Transforming you data with dplyr
 ============================================================
@@ -575,10 +559,6 @@ All of these functions have an equivalent function:
 * `*_dbl()` ...
 * `*_int()` ...
 
-
-Delete: All functions are consistent with each other and they fit perfectly with the philosophy of the tidyverse.
-Delete: These are particularly useful for programming with, to avoid unexpected errors.
-
 Iteration and modeling
 ========================================================
 
@@ -593,8 +573,6 @@ In which states does the % of blacks living explains the poverty rate better?
 ```
 
 Neat pipeline, eh?
-
-Delete: Perfect fit because we have only two observations
 
 Data visualization with ggplot2
 ========================================================
@@ -772,8 +750,8 @@ Data visualization
 Aesthetics vary by `geom_*()` functions so you should have a look at the documentation before using it.
 
 - `alpha` for transparency
-- `colour` colours points, but colours the surrounding lines of the geom_bar
-- `fill` fill is the one that controls the geom_bar colours
+- `colour`
+- `fill`
 - `group` to show line plots by groups
 - `shape`
 - `size`
@@ -945,7 +923,7 @@ ggplot(models, aes(reorder(state, -r_square), r_square, fill = n)) +
 theme_set(theme_gray(base_size = 26))
 ```
 
-Data transformation with dplyr
+Transformation, modeling and visualization
 ============================================================
 
 Also from the `tidyverse`, the `broom` package turns models into data frames ready for visualization. 
@@ -959,7 +937,7 @@ broom::tidy(model)
 
 * We can use the `tidy` function to get the model output into a table.
 
-Data transformation with dplyr
+Transformation, modeling and visualization
 ============================================================
 We can use `tidy` to investigate whether the cause of death is related to whether the subject was armed.
 
@@ -979,7 +957,7 @@ models_gunshot <- # Loop through each race and run the model.
   map(~ glm(gunshot_ornot ~ as.character(armed_dummy), data = .x, family = 'binomial'))
 ```
 
-Data transformation with dplyr
+Transformation, modeling and visualization
 ============================================================
 We can tidy up our models and create some uncertainty intervals around the estimates.
 
@@ -994,10 +972,10 @@ tidy_models <-
 ```
 
 ```{r, echo = F}
-print(tidy_models, n = 5, width = 80)
+print(as_tibble(tidy_models), n = 5, width = 70)
 ```
 
-Data transformation with dplyr
+Transformation, modeling and visualization
 ============================================================
 
 ```{r, fig.width = 16, fig.height = 7, fig.align = 'center'}
@@ -1011,7 +989,7 @@ tidy_models %>%
        y = "Estimate of getting killed by a gunshot")
 ```
 
-Data transformation with dplyr
+Transformation, modeling and visualization
 ============================================================
 
 We can also just look at predicted probabilities for specific groups.
@@ -1035,7 +1013,7 @@ prob_models <-
 print(prob_models, n = 3) 
 ```
 
-Data transformation with dplyr
+Transformation, modeling and visualization
 ============================================================
 
 ```{r, fig.width = 16, fig.height = 7, fig.align = 'center'}
