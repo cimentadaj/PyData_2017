@@ -34,6 +34,16 @@ height: 900
 <img src="./figures/logo_tidyverse.png" width=300 height=350>
 </div>
 
+Presentation repository
+========================================================
+* How to get the slides?
+
+www.cimentadaj.github.io/PyData_2017/py_data_slides.html#/
+
+* Where's the Markdown file of this presentation?
+
+www.github.com/cimentadaj/PyData_2017
+
 The philosophy of the tidyverse 
 ========================================================
 incremental: true
